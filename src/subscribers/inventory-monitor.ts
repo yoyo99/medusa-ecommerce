@@ -38,10 +38,17 @@ export default async function handleInventoryUpdate({
         if (stockedQuantity < THRESHOLD) {
             console.log(`Low stock detected for item ${inventoryLevel.inventory_item_id}: ${stockedQuantity} remaining.`)
 
+            // LOGIC FOR STOCK = 0 (Disable Product Variant)
+            if (stockedQuantity === 0) {
+                // Note: Linking InventoryItem back to ProductVariant requires traversing InventoryService -> LinkModule -> ProductModule.
+                // Ideally, we send a specific 'out_of_stock' event to N8N, and N8N calls the Medusa API to update the Product Status.
+                // This keeps the "Business Logic" inside the automation tool (N8N) as requested, rather than hardcoding it here.
+            }
+
             const n8nUrl = process.env.N8N_INVENTORY_WEBHOOK_URL
             if (n8nUrl) {
                 const payload = {
-                    event: "low_stock_alert",
+                    event: stockedQuantity === 0 ? "out_of_stock" : "low_stock_alert",
                     inventory_item_id: inventoryLevel.inventory_item_id,
                     stocked_quantity: stockedQuantity,
                     location_id: inventoryLevel.location_id,
