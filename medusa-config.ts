@@ -1,8 +1,6 @@
-import { loadEnv, defineConfig } from '@medusajs/framework/utils'
+import { defineConfig } from "@medusajs/framework/utils"
 
-loadEnv(process.env.NODE_ENV || 'development', process.cwd())
-
-module.exports = defineConfig({
+export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     http: {
@@ -13,12 +11,18 @@ module.exports = defineConfig({
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     },
     workerMode: process.env.MEDUSA_WORKER_MODE as "shared" | "worker" | "server",
-    redisUrl: process.env.REDIS_URL
+    redisUrl: process.env.REDIS_URL,
   },
+
   admin: {
+    // ne pas servir si désactivé via env
     disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
-    backendUrl: process.env.MEDUSA_BACKEND_URL,
+    // URL publique de ton backend (pour les appels API depuis l’admin)
+    backendUrl: process.env.MEDUSA_BACKEND_URL || "https://medusa.jobnexai.com",
+    // chemin où l’admin sera servie
+    path: "/app",
   },
+
   modules: [
     {
       resolve: "@medusajs/medusa/cache-redis",
@@ -38,20 +42,6 @@ module.exports = defineConfig({
         redis: {
           url: process.env.REDIS_URL,
         },
-      },
-    },
-    {
-      resolve: "@medusajs/medusa/payment",
-      options: {
-        providers: [
-          {
-            resolve: "@medusajs/payment-stripe",
-            id: "stripe",
-            options: {
-              apiKey: process.env.STRIPE_API_KEY,
-            },
-          },
-        ],
       },
     },
     {
