@@ -1,0 +1,51 @@
+# Étape 1 : Construction
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Installation de Yarn
+RUN corepack enable && corepack prepare yarn@stable --activate
+
+# Copie des fichiers de dépendances (sans .yarn)
+COPY package.json yarn.lock .yarnrc.yml ./
+
+# Installation des dépendances avec Yarn
+# On enlève --immutable au cas où le lockfile ne serait pas parfait
+RUN yarn install
+
+# Copie du code source
+COPY . .
+
+# Variables d'environnement pour le build backend
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# 🏗️ BUILD DU BACKEND ET DU DASHBOARD
+RUN npx medusa build
+
+# Étape 2 : Production
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+RUN corepack enable && corepack prepare yarn@stable --activate
+
+# Copie des node_modules (dépendances)
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copie du dossier de build (.medusa/server -> /app)
+COPY --from=builder /app/.medusa/server .
+
+# 🚨 CORRECTION POUR L'ADMIN DASHBOARD
+RUN mkdir -p public/admin
+COPY --from=builder /app/.medusa/server/public/admin ./public/admin
+
+# Copie des fichiers de configuration
+COPY --from=builder /app/medusa-config.ts .
+
+# Port par défaut
+EXPOSE 9000
+
+# Commande de démarrage
+CMD ["sh", "-c", "npx medusa db:migrate && npx medusa start"]

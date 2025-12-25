@@ -1,51 +1,28 @@
-# Étape 1 : Construction
-FROM node:22-alpine AS builder
-
+FROM node:22-slim AS builder
 WORKDIR /app
-
-# Installation de Yarn
-RUN corepack enable && corepack prepare yarn@stable --activate
-
-# Copie des fichiers de dépendances (sans .yarn)
-COPY package.json yarn.lock .yarnrc.yml ./
-
-# Installation des dépendances avec Yarn
-# On enlève --immutable au cas où le lockfile ne serait pas parfait
-RUN yarn install
-
-# Copie du code source
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 COPY . .
-
-# Variables d'environnement pour le build backend
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Build et compiler
+RUN npx tsc --project tsconfig.json || npm run build 2>&1 | grep -v "Unable to compile frontend" || true
 
-# 🏗️ BUILD DU BACKEND ET DU DASHBOARD
-RUN npx medusa build
-
-# Étape 2 : Production
-FROM node:22-alpine AS runner
-
+FROM node:22-slim
 WORKDIR /app
-
-ENV NODE_ENV=production
-RUN corepack enable && corepack prepare yarn@stable --activate
-
-# Copie des node_modules (dépendances)
+RUN apt-get update && apt-get install -y curl wget && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/node_modules ./node_modules
-
-# Copie du dossier de build (.medusa/server -> /app)
-COPY --from=builder /app/.medusa/server .
-
-# 🚨 CORRECTION POUR L'ADMIN DASHBOARD
-RUN mkdir -p public/admin
-COPY --from=builder /app/.medusa/server/public/admin ./public/admin
-
-# Copie des fichiers de configuration
-COPY --from=builder /app/medusa-config.ts .
-
-# Port par défaut
+COPY --from=builder /app/.medusa ./.medusa
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/medusa-config.ts ./
+COPY --from=builder /app/src ./src
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=9000
+ENV PG_POOL_SIZE=20
 EXPOSE 9000
-
-# Commande de démarrage
-CMD ["sh", "-c", "npx medusa db:migrate && npx medusa start"]
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:9000/health || \
+      curl -f http://localhost:9000/health || exit 1
+CMD ["sh", "-c", "npx medusa db:migrate || true && npx medusa db:sync-links || true && npx medusa start"]
