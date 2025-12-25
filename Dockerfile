@@ -10,8 +10,8 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
-# Build Medusa v2
-RUN npx medusa prepare
+# Build Medusa v2 (utilise ton script package.json)
+RUN npm run build
 
 # --- Runtime stage -------------------------------------------------------
 FROM node:22-slim
