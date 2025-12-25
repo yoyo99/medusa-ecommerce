@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y curl wget && rm -rf /var/lib/apt/lists/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/medusajs-config.ts ./
+COPY --from=builder /app/medusa-config.ts ./
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
