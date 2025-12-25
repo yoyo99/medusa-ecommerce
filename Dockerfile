@@ -3,19 +3,21 @@ FROM node:22-slim AS builder
 
 WORKDIR /app
 
-# Dependencies nécessaires pour node-gyp (quelques modules Medusa en ont besoin)
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# Dépendances nécessaires pour node-gyp (certains packages Medusa les utilisent)
+RUN apt-get update \
+    && apt-get install -y python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copie des fichiers package.* pour installation propre
 COPY package*.json ./
 
-# On installe TOUTES les deps (prod + dev) pour pouvoir build en TypeScript
+# Installer toutes les dépendances (prod + dev) pour compiler TS
 RUN npm install --legacy-peer-deps
 
 # Copie du reste du projet
 COPY . .
 
-# Build Medusa (génère dist/)
+# Build TypeScript → dist/
 RUN npm run build
 
 
@@ -24,20 +26,20 @@ FROM node:22-slim AS runtime
 
 WORKDIR /app
 
-# Copy uniquement le strict nécessaire dans l'image finale
+# Copie uniquement ce qui est nécessaire à l'exécution
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/medusa-config.ts ./
+COPY --from=builder /app/medusa.config.ts ./   # ✔️ CONFIRMÉ : BON NOM FICHIER
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=9000
 EXPOSE 9000
 
-# Healthcheck compatible Medusa v2 (endpoint disponibles)
+# Healthcheck Medusa V2
 HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:9000/app/health || exit 1
 
-# Démarrage Medusa V2 compilé
+# Démarrage Medusa compilée
 CMD ["node", "dist/main.js"]
