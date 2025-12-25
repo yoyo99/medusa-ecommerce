@@ -1,21 +1,23 @@
-/dist
-.env
-.DS_Store
-/uploads
-/node_modules
+# --- Node ---
+node_modules/
+dist/
+build/
+.cache/
+tsconfig.tsbuildinfo
 yarn-error.log
+.DS_Store
 
-.idea
+# --- Env files ---
+.env
+.env.*
+*.log
 
-coverage
-
-!src/**
-
-./tsconfig.tsbuildinfo
+# --- Medusa ---
+.medusa
 medusa-db.sql
-build
-.cache
+uploads/
 
+# --- Yarn ---
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -23,4 +25,24 @@ build
 !.yarn/sdks
 !.yarn/versions
 
-.medusa
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+venv/
+.venv/
+*/venv/
+*/.venv/
+
+stock-updater/venv/
+
+# --- IDE ---
+.idea
+.vscode
