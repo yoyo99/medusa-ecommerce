@@ -29,6 +29,8 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
+# 🔴 IMPORTANT : copier la config Medusa à la racine
+COPY --from=builder /app/src/medusa-config.ts ./medusa-config.ts
 
 # Définir les variables d'environnement pour la production
 ENV NODE_ENV=production
