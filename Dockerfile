@@ -30,7 +30,7 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/medusa-config.ts ./   # ✔️ CONFIRMÉ : BON NOM FICHIER
+COPY --from=builder /app/dist/medusa-config.js ./medusa-config.js
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
