@@ -36,9 +36,5 @@ ENV HOST=0.0.0.0
 ENV PORT=9000
 EXPOSE 9000
 
-# Healthcheck pour Medusa V2
-HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:9000/app/health || exit 1
-
-# Commande de démarrage
-CMD ["node", "dist/main.js"]
+# Démarrage Medusa via le script npm "start"
+CMD ["npm", "run", "start"]
