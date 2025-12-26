@@ -5,33 +5,29 @@
     "moduleResolution": "Node16",
 
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
 
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
 
-    "declaration": false,
-    "sourceMap": false,
-    "inlineSourceMap": false,
-
-    "outDir": "dist",
-    "rootDir": "src",
-
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
+
     "strictNullChecks": true,
-
     "checkJs": false,
-    "jsx": "react-jsx"
-  },
 
-  "ts-node": {
-    "swc": true
+    "outDir": "dist",
+    "rootDir": ".",
+
+    "sourceMap": false
   },
 
   "include": [
     "src/**/*",
+    "src/medusa-config.ts",
     ".medusa/types/*"
   ],
 
